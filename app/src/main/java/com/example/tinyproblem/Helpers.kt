@@ -8,5 +8,6 @@ fun logMessage(message: String) {
 }
 
 fun isHost(playerName: String?, playersList: List<Player>): Boolean{
-    return playerName == playersList[0].playerName
+    val hostValue = playersList.find { it.playerName == playerName }?.host
+    return (hostValue == 1)
 }
