@@ -1,7 +1,10 @@
 package com.example.tinyproblem
 
+import android.content.ComponentName
 import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.IBinder
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -17,9 +20,20 @@ import kotlin.random.nextInt
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var binding: ActivityMainBinding
+    private lateinit var binding: ActivityMainBinding
 
+    private var bluetoothLeConnection: BluetoothLeConnection? = null
 
+    private val serviceConnection: ServiceConnection = object: ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            bluetoothLeConnection = (service as BluetoothLeConnection.LocalBinder).getService()
+            bluetoothLeConnection?.initialize()
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            bluetoothLeConnection = null
+        }
+    }
 
     override fun onResume() {
         super.onResume()
@@ -63,6 +77,8 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Please enter a game ID", Toast.LENGTH_SHORT).show()
             }
         }
+
+        startBluetoothService(serviceConnection)
     }
 
     // Create Online Game (for host)

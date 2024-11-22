@@ -43,6 +43,10 @@ class BluetoothLeConnection : Service() {
         private const val STATE_CONNECTED = 2
     }
 
+    fun sendToOthers(message: ByteArray) {
+        // TODO: send message to others via firebase?
+    }
+
     private val bluetoothGattCallback = object: BluetoothGattCallback() {
         @SuppressLint("MissingPermission")
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
@@ -95,12 +99,6 @@ class BluetoothLeConnection : Service() {
         ) {
             logMessage("onCharacteristicRead ${value.decodeToString()}")
 
-            if (value.contentEquals(writeQueue.peek())) {
-                logMessage("hmm good")
-            } else {
-                logMessage("bad")
-            }
-
             super.onCharacteristicRead(gatt, characteristic, value, status)
         }
 
@@ -109,7 +107,9 @@ class BluetoothLeConnection : Service() {
             characteristic: BluetoothGattCharacteristic,
             value: ByteArray
         ) {
-            logMessage("onCharacteristicChanged ${value.decodeToString()}")
+            logMessage("onCharacteristicChanged")
+            logMessage("uuid: ${characteristic.uuid} value: ${value.decodeToString()}")
+            sendToOthers(value)
             super.onCharacteristicChanged(gatt, characteristic, value)
         }
 
@@ -119,25 +119,24 @@ class BluetoothLeConnection : Service() {
             characteristic: BluetoothGattCharacteristic?,
             status: Int
         ) {
-            logMessage("onCharacteristicWrite called!!")
+            logMessage("onCharacteristicWrite - status $status")
 
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                gatt!!.readCharacteristic(characteristic)
+                bluetoothGatt!!.executeReliableWrite()
+            } else {
+                bluetoothGatt!!.abortReliableWrite()
             }
-
-//            bluetoothGatt!!.executeReliableWrite()
-//            characteristic.describeContents()
-
-            // for the queue
-//            if (writeQueue.peek() != null) {
-//                writeNextPayload()
-//            }
 
             super.onCharacteristicWrite(gatt, characteristic, status)
         }
 
         override fun onReliableWriteCompleted(gatt: BluetoothGatt?, status: Int) {
             logMessage("onReliableWriteCompleted")
+
+            // for the queue
+            if (writeQueue.peek() != null) {
+                writeNextPayload()
+            }
 
             super.onReliableWriteCompleted(gatt, status)
         }
@@ -252,7 +251,7 @@ class BluetoothLeConnection : Service() {
 
                 writeQueue.add("END".toByteArray())
 
-                val writePayload = writeQueue.peek()
+                val writePayload = writeQueue.poll()
 
                 logMessage("writePayload - ${writePayload!!.decodeToString()}")
 

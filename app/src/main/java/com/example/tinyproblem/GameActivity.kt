@@ -1,5 +1,7 @@
 package com.example.tinyproblem
 
+import android.content.ComponentName
+import android.content.ServiceConnection
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -9,10 +11,11 @@ import com.example.tinyproblem.databinding.ActivityGameBinding
 import com.google.firebase.firestore.FirebaseFirestore
 import androidx.recyclerview.widget.GridLayoutManager
 import android.os.CountDownTimer
+import android.os.IBinder
 
 class GameActivity : AppCompatActivity() {
 
-    lateinit var binding: ActivityGameBinding
+    private lateinit var binding: ActivityGameBinding
     private var countDownTimer: CountDownTimer? = null // Declare timer here
 
     private var gameModel: GameModel? = null
@@ -22,6 +25,19 @@ class GameActivity : AppCompatActivity() {
     private var gameId: String? = null // To hold the game ID
     private var secondTimerDuration: Long? = null // Duration for the second timer
     private var secondCountDownTimer: CountDownTimer? = null
+
+    private var bluetoothLeConnection: BluetoothLeConnection? = null
+
+    private val serviceConnection: ServiceConnection = object: ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            bluetoothLeConnection = (service as BluetoothLeConnection.LocalBinder).getService()
+            bluetoothLeConnection?.initialize()
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            bluetoothLeConnection = null
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -183,12 +199,16 @@ class GameActivity : AppCompatActivity() {
         binding.quitGame.setOnClickListener {
             quitGame()
         }
+
+        startBluetoothService(serviceConnection)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         countDownTimer?.cancel()
         secondCountDownTimer?.cancel()
+
+        bluetoothLeConnection?.close()
     }
 
     fun startGameForHost(gameId: String) {
