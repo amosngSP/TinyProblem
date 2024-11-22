@@ -14,7 +14,11 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -22,6 +26,21 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.tinyproblem.databinding.ActivityMainBluetoothBinding
 import com.google.android.material.snackbar.Snackbar
+
+class CustomerArrayAdapter(private val context: Context, private val items: MutableList<ScanResult>): ArrayAdapter<ScanResult>(context, 0, items) {
+    @SuppressLint("MissingPermission")
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+        val view: View = convertView ?: LayoutInflater.from(context).inflate(android.R.layout.simple_list_item_1, parent, false)
+
+        val textView = view.findViewById<TextView>(android.R.id.text1)
+
+        val currentItem = items[position]
+
+        textView.text = currentItem.device.name.toString()
+
+        return view
+    }
+}
 
 @SuppressLint("MissingPermission")
 class MainBluetooth : AppCompatActivity() {
@@ -42,12 +61,6 @@ class MainBluetooth : AppCompatActivity() {
         set(value) {
             field = value
             runOnUiThread {binding.scanButton.text = if (value) "Stop Scan" else "Start Scan"}
-        }
-
-    private var deviceIsConnected = false
-        set(value) {
-            field = value
-            runOnUiThread { binding.disconnectButton.isEnabled = field }
         }
 
     private val bluetoothEnablingResult = registerForActivityResult(
@@ -81,9 +94,6 @@ class MainBluetooth : AppCompatActivity() {
         // android's new viewbinding
         binding = ActivityMainBluetoothBinding.inflate(layoutInflater)
 
-        // disable disconnect button on default until a device is connect
-        binding.disconnectButton.isEnabled = false
-
         enableEdgeToEdge()
 
         // the view
@@ -95,7 +105,7 @@ class MainBluetooth : AppCompatActivity() {
             insets
         }
 
-        startService()
+        startBluetoothService(serviceConnection)
 
         // get required bluetooth manager, adapter, and BLE scanner.
         bluetoothManager = this.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -107,23 +117,8 @@ class MainBluetooth : AppCompatActivity() {
             if (isScanning) stopBLEScan() else startBLEScan()
         }
 
-        // disconnect button
-        binding.disconnectButton.setOnClickListener{
-            if (hasRequiredBluetoothPermissions()) {
-                bluetoothLeConnection?.disconnect()
-            }
-        }
-
-        // play button
-        binding.playButton.setOnClickListener {
-
-            Intent(this, NameActivity::class.java).also {
-                startActivity(it)
-            }
-        }
-
         // listview show list of bluetooth devices
-        arrayAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, scanResults)
+        arrayAdapter = CustomerArrayAdapter(this, scanResults)
         binding.deviceListView.adapter = arrayAdapter
         arrayAdapter.setNotifyOnChange(true)
 
@@ -148,16 +143,9 @@ class MainBluetooth : AppCompatActivity() {
         if (!bluetoothAdapter.isEnabled) {
             promptEnableBluetooth()
         }
-    }
 
-    private fun startService() {
-        val bleServiceIntent = Intent(this, BluetoothLeConnection::class.java)
-
-        // connect to device
-        if (bindService(bleServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE)) {
-            logMessage("service is bounded")
-        } else {
-            logMessage("something went wrong")
+        if (bluetoothLeConnection != null) {
+            startBluetoothService(serviceConnection)
         }
     }
 
@@ -183,7 +171,6 @@ class MainBluetooth : AppCompatActivity() {
         }
 
         isScanning = false
-        deviceIsConnected = false
         bluetoothLeScanner.stopScan(scanCallback)
     }
 
