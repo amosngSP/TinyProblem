@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.util.Log
+import kotlinx.serialization.Serializable
 
 // Logs message using Log.d
 fun logMessage(message: String) {
@@ -24,5 +25,7 @@ fun Context.startBluetoothService(serviceConnection: ServiceConnection) {
     } else {
         logMessage("something went wrong")
     }
-
 }
+// "{\"game_action\":\"start\",\"hiding_time\":30,\"seeker_time\":60,\"hiding_players\":5,\"player_type\":\"hider\"}"
+@Serializable
+data class GamePayload(var game_action: String, var hiding_time: Int, var seeker_time: Int, var hiding_players: Int, var player_type: String)

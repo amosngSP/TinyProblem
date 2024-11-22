@@ -12,6 +12,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import androidx.recyclerview.widget.GridLayoutManager
 import android.os.CountDownTimer
 import android.os.IBinder
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
 
 class GameActivity : AppCompatActivity() {
 
@@ -186,6 +188,24 @@ class GameActivity : AppCompatActivity() {
         }
 
         binding.startGameBtn.setOnClickListener {
+//            val noOfHiders = binding.hiderInput.text.toString().toInt()
+//            val noOfSeekers = binding.seekerInput.text.toString().toInt()
+//            val hidingDuration = binding.timerInput.text.toString().toInt()
+//            val seekingDuration = binding.secondTimerInput.text.toString().toInt()
+//
+//            val gPayload = GamePayload(
+//                "start",
+//                hidingDuration,
+//                seekingDuration,
+//                noOfHiders,
+//                "hider"
+//            )
+//
+//            val json = Json {ignoreUnknownKeys = true}
+//            val payloadStr = json.encodeToString(gPayload)
+//
+//            bluetoothLeConnection?.writePayload(payloadStr.toByteArray())
+
             if (playersList.size > 1) {
                 if (isHost(playerName,playersList)) {
                     startGameForHost(gameId!!)
