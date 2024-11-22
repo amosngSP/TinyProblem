@@ -131,7 +131,7 @@ class GameActivity : AppCompatActivity() {
                     val seekers = shuffledPlayers.drop(hiderCount)
 
                     // Map roles to players
-                    val updatedPlayers = shuffledPlayers.map { playerName ->
+                    val updatedPlayers = playersList.map { playerName ->
                         Player(
                             playerName = playerName.playerName,
                             role = if (hiders.contains(playerName)) "Hider" else "Seeker",
