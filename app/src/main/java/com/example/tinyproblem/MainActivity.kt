@@ -87,7 +87,7 @@ class MainActivity : AppCompatActivity() {
         val gameId = Random.nextInt(1000..9999).toString()
 
 
-        val host = Player(playerName,"")
+        val host = Player(playerName,"",1)
 
         // Save the initial game state with an empty list of players (only host is added initially)
         val gameModel = GameModel(

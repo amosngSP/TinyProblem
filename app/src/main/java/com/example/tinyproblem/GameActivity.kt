@@ -134,7 +134,8 @@ class GameActivity : AppCompatActivity() {
                     val updatedPlayers = shuffledPlayers.map { playerName ->
                         Player(
                             playerName = playerName.playerName,
-                            role = if (hiders.contains(playerName)) "Hider" else "Seeker"
+                            role = if (hiders.contains(playerName)) "Hider" else "Seeker",
+                            host = playerName.host
                         )
                     }
 
@@ -502,7 +503,7 @@ class GameActivity : AppCompatActivity() {
 
         } else {
             (binding.playerListRecyclerView.adapter as PlayerAdapter).apply {
-                updatePlayers(playersList.map { player -> Player(player.playerName, player.role) })
+                updatePlayers(playersList.map { player -> Player(player.playerName, player.role,player.host) })
             }
         }
     }

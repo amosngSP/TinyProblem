@@ -11,6 +11,7 @@ fun logMessage(message: String) {
 }
 
 fun isHost(playerName: String?, playersList: List<Player>): Boolean{
+
     return playerName == playersList[0].playerName
 }
 
@@ -23,4 +24,5 @@ fun Context.startBluetoothService(serviceConnection: ServiceConnection) {
     } else {
         logMessage("something went wrong")
     }
+
 }
