@@ -24,6 +24,7 @@ enum class GameStatus{
 data class Player(
     val playerName: String = "",
     val role: String = "",
-    val host: Int = 0
+    val host: Int = 0,
+    var found: Boolean = false,
 )
 

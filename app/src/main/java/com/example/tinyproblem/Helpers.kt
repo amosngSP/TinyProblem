@@ -40,3 +40,7 @@ data class GamePayload(
     var seeker_time: Long = 0,
     var hiding_players: Int,
     var player_type: String)
+
+interface NotificationListener {
+    fun onNotificationReceived(message: String)
+}
