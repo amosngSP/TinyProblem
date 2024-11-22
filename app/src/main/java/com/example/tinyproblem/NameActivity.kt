@@ -1,7 +1,10 @@
 package com.example.tinyproblem
 
+import android.content.ComponentName
 import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.IBinder
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +16,19 @@ import com.google.firebase.firestore.FirebaseFirestore
 class NameActivity : AppCompatActivity() {
 
     lateinit var binding: ActivityNameBinding
+
+    private var bluetoothLeConnection: BluetoothLeConnection? = null
+
+    private val serviceConnection: ServiceConnection = object: ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            bluetoothLeConnection = (service as BluetoothLeConnection.LocalBinder).getService()
+            bluetoothLeConnection?.initialize()
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            bluetoothLeConnection = null
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,7 +54,10 @@ class NameActivity : AppCompatActivity() {
 
             // Save the name to Firebase and proceed if successful
             saveNameToFirebase(playerName)
+
         }
+
+        startBluetoothService(serviceConnection)
     }
 
     private fun saveNameToFirebase(playerName: String) {
