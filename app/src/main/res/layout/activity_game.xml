@@ -1,0 +1,131 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".GameActivity">
+
+    <!-- Title TextView -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:textStyle="bold"
+        android:textSize="28sp"
+        android:layout_marginBottom="6dp"
+        android:layout_gravity="center"
+        android:padding="4dp" />
+
+    <!-- Game Status TextView -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/game_status_text"
+        android:gravity="center"
+        android:textSize="24sp"
+        android:layout_marginBottom="6dp"
+        android:textStyle="bold"
+        android:text="@string/game_not_started"
+        android:letterSpacing="0.04"
+        android:textColor="#FF0000" />
+
+    <!-- Timer TextView -->
+    <TextView
+        android:id="@+id/timerText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:textSize="16sp"
+        android:text="Timer will appear here"
+        android:gravity="center"
+        android:layout_gravity="center_horizontal" />
+
+    <!-- Player List RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/player_list_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:padding="4dp" />
+
+    <!--    enter hider-->
+    <EditText
+        android:id="@+id/hiderInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter the number of hiders"
+        android:layout_marginBottom="6dp"
+        android:inputType="number" />
+
+    <!--    enter seeker-->
+    <EditText
+        android:id="@+id/seekerInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:autofillHints=""
+        android:hint="@string/enter_the_number_of_seekers"
+        android:inputType="number" />
+
+    <Button
+        android:id="@+id/setHiderSeekerBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Set Hiders and Seekers"
+        android:layout_gravity="center"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Set Timer Button -->
+    <EditText
+        android:id="@+id/timerInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/enter_hiding_time_duration_in_seconds"
+        android:layout_marginBottom="6dp"
+        android:inputType="number" />
+
+    <Button
+        android:id="@+id/setTimerBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/set_hiding_time"
+        android:layout_gravity="center"
+        android:layout_marginBottom="8dp" />
+
+    <EditText
+        android:id="@+id/secondTimerInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/enter_seeking_time_duration_in_seconds"
+        android:layout_marginBottom="6dp"
+        android:inputType="number" />
+
+    <Button
+        android:id="@+id/setSecondTimerBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/set_seeking_time"
+        android:layout_gravity="center"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Start Game Button -->
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="8dp"
+        android:text="@string/start_game"
+        android:id="@+id/start_game_btn" />
+
+    <!-- Quit Game Button -->
+    <Button
+        android:id="@+id/quit_game"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="8dp"
+        android:text="@string/quit_game" />
+
+</LinearLayout>

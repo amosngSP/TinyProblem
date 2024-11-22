@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Hide and Seek</string>
+    <string name="game_not_started">Game not started</string>
+    <string name="start_game">Start game</string>
+    <string name="or">Or</string>
+    <string name="create_game_online">Create Game Online</string>
+    <string name="enter_game_id">Enter game Id</string>
+    <string name="join_game_online">Join Game Online</string>
+    <string name="next">Next</string>
+    <string name="enter_player_name">Enter a name</string>
+    <string name="player_name">Player Name</string>
+    <string name="quit_game">Quit Game</string> <!-- New string resource -->
+</resources>

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "143075531932",
+    "project_id": "tinyproblem-7fff1",
+    "storage_bucket": "tinyproblem-7fff1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:143075531932:android:d06766bbb17a7ac3b3e159",
+        "android_client_info": {
+          "package_name": "com.example.tinyproblem"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCX5LS2smaogt10LIvSSso28fAAQ1Hi20E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

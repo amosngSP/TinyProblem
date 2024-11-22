@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">Hide and Seek</string>
+    <string name="game_not_started">Game not started</string>
+    <string name="start_game">Start game</string>
+    <string name="or">Or</string>
+    <string name="create_lobby">Create Lobby</string>
+    <string name="enter_game_id">Enter game Id</string>
+    <string name="join_lobby">Join Lobby</string>
+    <string name="next">Next</string>
+    <string name="enter_player_name">Enter a name</string>
+    <string name="player_name">Player Name</string>
+    <string name="quit_game">Quit Game</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="previous">Previous</string>
+    <string name="welcome_message">Welcome to Game Companion. In order to join or create a game, you need to pair your Game Companion Watch first.</string>
+    <string name="main_view_header">ICT1011 - Game Companion</string>
+    <string name="bt_start_scan_title">Start Scanning</string>
+    <string name="play_button_string">Play</string>
+    <string name="timer_will_appear_here">Timer will appear here</string>
+    <string name="enter_the_number_of_hider">Enter the number of hider</string>
+    <string name="enter_the_number_of_seeker">Enter the number of seeker</string>
+    <string name="set_hider_and_seeker">Set Hider and Seeker</string>
+    <string name="enter_timer_duration_in_seconds">Enter timer duration in seconds</string>
+    <string name="set_timer">Set Timer</string>
+    <string name="enter_second_timer_duration_in_seconds">Enter second timer duration in seconds</string>
+    <string name="set_second_timer">Set Second Timer</string>
+    <string name="set_hiding_time">Set Hiding Time</string>
+    <string name="enter_seeking_time_duration_in_seconds">Enter seeking time duration (in seconds)</string>
+    <string name="enter_hiding_time_duration_in_seconds">Enter hiding time duration (in seconds)</string>
+    <string name="set_seeking_time">Set Seeking Time</string>
+    <string name="enter_the_number_of_seekers">Enter the number of seekers</string> <!-- New string resource -->
+</resources>
