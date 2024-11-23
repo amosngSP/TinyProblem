@@ -41,11 +41,6 @@ class BluetoothLeConnection : Service() {
         private const val STATE_CONNECTED = 2
     }
 
-//    fun receiveNotification(message: String): Boolean {
-//        // TODO: send message to others via firebase?
-//        return false
-//    }
-
     private var notificationListener: NotificationListener? = null
 
     // set the activity object that has inherited NotificationListener
@@ -54,9 +49,8 @@ class BluetoothLeConnection : Service() {
         this.notificationListener = listener
     }
 
-    fun receiveNotification(message: String): Boolean {
+    fun receiveNotification(message: String) {
         notificationListener?.onNotificationReceived(message)
-        return true // Or handle the return value as needed
     }
 
     // event callback for an established gatt connection to the TinyCircuit
