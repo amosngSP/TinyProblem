@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
-import android.bluetooth.BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
 import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
@@ -15,7 +14,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
-import kotlinx.coroutines.delay
 import java.util.UUID
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -43,9 +41,10 @@ class BluetoothLeConnection : Service() {
         private const val STATE_CONNECTED = 2
     }
 
-    fun sendToOthers(message: ByteArray) {
-        // TODO: send message to others via firebase?
-    }
+//    fun receiveNotification(message: String): Boolean {
+//        // TODO: send message to others via firebase?
+//        return false
+//    }
 
     private var notificationListener: NotificationListener? = null
 
@@ -123,7 +122,7 @@ class BluetoothLeConnection : Service() {
         ) {
             logMessage("onCharacteristicChanged")
             logMessage("uuid: ${characteristic.uuid} value: ${value.decodeToString()}")
-            sendToOthers(value)
+            receiveNotification(value.decodeToString())
             super.onCharacteristicChanged(gatt, characteristic, value)
         }
 

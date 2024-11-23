@@ -33,9 +33,12 @@ fun Context.startBluetoothService(serviceConnection: ServiceConnection) {
         logMessage("something went wrong")
     }
 }
-// "{\"game_action\":\"start\",\"hiding_time\":30,\"seeker_time\":60,\"hiding_players\":5,\"player_type\":\"hider\"}"
+
+fun currentEpochTime(): Long{
+    return System.currentTimeMillis() / 1000
+}
+
 @Serializable
-data class GamePayload(var game_action: String, var hiding_time: Int, var seeker_time: Int, var hiding_players: Int, var player_type: String)
 data class GamePayload(
     var game_action: String,
     var current_time: Long = 0,
