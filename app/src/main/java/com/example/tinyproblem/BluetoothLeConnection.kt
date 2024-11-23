@@ -47,6 +47,20 @@ class BluetoothLeConnection : Service() {
         // TODO: send message to others via firebase?
     }
 
+    private var notificationListener: NotificationListener? = null
+
+    // set the activity object that has inherited NotificationListener
+    // to link a callback
+    fun setNotificationListener(listener: NotificationListener) {
+        this.notificationListener = listener
+    }
+
+    fun receiveNotification(message: String): Boolean {
+        notificationListener?.onNotificationReceived(message)
+        return true // Or handle the return value as needed
+    }
+
+    // event callback for an established gatt connection to the TinyCircuit
     private val bluetoothGattCallback = object: BluetoothGattCallback() {
         @SuppressLint("MissingPermission")
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
@@ -213,13 +227,9 @@ class BluetoothLeConnection : Service() {
 
     @SuppressLint("NewApi", "MissingPermission")
     fun writePayload(payload: ByteArray): Boolean {
+        logMessage("new payload received! size: ${payload.size} bytes")
         if (bluetoothGatt == null)
             return false
-
-        // do we need reliableWrite?
-//        if (!bluetoothGatt!!.beginReliableWrite()) {
-//            logMessage("unable to beginReliableWrite")
-//        }
 
         val pos = bluetoothService!!.characteristics.indexOfFirst { it.uuid.toString() == writeCharacteristicUuid }
 
@@ -240,40 +250,27 @@ class BluetoothLeConnection : Service() {
                 }
             }
 
-            if (payload.size > 20) {
-                writeQueue.add("START".toByteArray())
+            writeQueue.add("START".toByteArray())
 
-                val chunks = payload.toList().chunked(15)
+            val chunks = payload.toList().chunked(15)
 
-                for (chunk in chunks) {
-                    writeQueue.add(chunk.toByteArray())
-                }
-
-                writeQueue.add("END".toByteArray())
-
-                val writePayload = writeQueue.poll()
-
-                logMessage("writePayload - ${writePayload!!.decodeToString()}")
-
-                bluetoothGatt!!.writeCharacteristic(
-                    characteristic,
-                    writePayload,
-                    writeType
-                )
-            } else {
-                writeQueue.add("START".toByteArray())
-                writeQueue.add(payload)
-                writeQueue.add("END".toByteArray())
-
-                val writePayload = writeQueue.poll()
-                bluetoothGatt!!.writeCharacteristic(
-                    characteristic,
-                    writePayload,
-                    writeType
-                )
+            for (chunk in chunks) {
+                writeQueue.add(chunk.toByteArray())
             }
 
-            logMessage("sending payload to characteristic ")
+            writeQueue.add("END".toByteArray())
+
+            val writePayload = writeQueue.poll()
+
+            logMessage("writePayload - ${writePayload!!.decodeToString()}")
+
+            bluetoothGatt!!.writeCharacteristic(
+                characteristic,
+                writePayload,
+                writeType
+            )
+
+            logMessage("sending payload to characteristic ${characteristic.uuid}")
 
             return true
         }
