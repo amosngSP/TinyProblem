@@ -68,6 +68,7 @@ class GameActivity : AppCompatActivity(), NotificationListener {
     }
 
     private fun notifyPlayerCaught() {
+        logMessage("notifying player caught")
         val caughtPayload = "{\"game_action\": \"caught\"}"
         bluetoothLeConnection?.writePayload(caughtPayload.toByteArray())
     }
@@ -288,6 +289,8 @@ class GameActivity : AppCompatActivity(), NotificationListener {
                     secondTimerEndTime = secondTimerEndTime
                 )
 
+                listenForCaughtHiders(gameId)
+
                 // Save to Firestore
                 firestore.collection("games").document(gameId)
                     .set(updatedGameModel)
@@ -443,6 +446,35 @@ class GameActivity : AppCompatActivity(), NotificationListener {
                     playersList.addAll(updatedGameModel.players) // Update with latest players and roles
                     gameModel = updatedGameModel
                     updatePlayerListUI()
+                }
+            }
+    }
+
+    private fun listenForCaughtHiders(gameId: String?) {
+        if (gameId.isNullOrEmpty()) return
+
+        firestore.collection("games").document(gameId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("GameActivity", "Error listening for caught hiders: ${error.message}")
+                    return@addSnapshotListener
+                }
+
+                val model = snapshot?.toObject(GameModel::class.java)
+                if (model != null) {
+                    this.gameModel = model
+                    val updatedPlayers = model.players
+                    if (updatedPlayers.isNotEmpty()) {
+                        for (player in updatedPlayers) {
+                            val localPlayer = playersList.find { it.playerName == player.playerName }
+                            if (localPlayer != null && localPlayer.found != player.found) {
+                                notifyPlayerCaught()
+                            }
+                        }
+                        playersList.clear()
+                        playersList.addAll(updatedPlayers)
+                        updatePlayerListUI()
+                    }
                 }
             }
     }

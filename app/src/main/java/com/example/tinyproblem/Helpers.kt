@@ -1,9 +1,16 @@
 package com.example.tinyproblem
 
+import android.annotation.SuppressLint
+import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.TextView
 import kotlinx.serialization.Serializable
 
 // Logs message using Log.d
@@ -12,7 +19,6 @@ fun logMessage(message: String) {
 }
 
 fun isHost(playerName: String?, playersList: List<Player>): Boolean{
-
     return playerName == playersList[0].playerName
 }
 
@@ -30,7 +36,6 @@ fun Context.startBluetoothService(serviceConnection: ServiceConnection) {
 fun currentEpochTime(): Long{
     return System.currentTimeMillis() / 1000
 }
-// "{\"game_action\":\"start\",\"hiding_time\":30,\"seeker_time\":60,\"hiding_players\":5,\"player_type\":\"hider\"}"
 
 @Serializable
 data class GamePayload(
@@ -43,4 +48,19 @@ data class GamePayload(
 
 interface NotificationListener {
     fun onNotificationReceived(message: String)
+}
+
+class CustomerArrayAdapter(private val context: Context, private val items: MutableList<ScanResult>): ArrayAdapter<ScanResult>(context, 0, items) {
+    @SuppressLint("MissingPermission")
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+        val view: View = convertView ?: LayoutInflater.from(context).inflate(android.R.layout.simple_list_item_1, parent, false)
+
+        val textView = view.findViewById<TextView>(android.R.id.text1)
+
+        val currentItem = items[position]
+
+        textView.text = currentItem.device.name.toString()
+
+        return view
+    }
 }
