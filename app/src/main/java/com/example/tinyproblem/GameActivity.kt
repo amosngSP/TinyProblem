@@ -31,7 +31,7 @@ class GameActivity : AppCompatActivity(), NotificationListener {
     private var secondCountDownTimer: CountDownTimer? = null
     private var start_signal: Boolean = false
 
-    private var playersCaught = 0;
+    private var playerCaught: Boolean = false;
 
     private var bluetoothLeConnection: BluetoothLeConnection? = null
 
@@ -54,6 +54,8 @@ class GameActivity : AppCompatActivity(), NotificationListener {
 
         val playerPos = playersList.indexOfFirst { it.playerName == playerName }
         playersList[playerPos].found = true
+
+        playerCaught = true
 
         gameId?.let { id ->
             firestore.collection("games").document(id)
@@ -242,7 +244,6 @@ class GameActivity : AppCompatActivity(), NotificationListener {
         super.onDestroy()
         countDownTimer?.cancel()
         secondCountDownTimer?.cancel()
-        bluetoothLeConnection?.close()
     }
 
     fun startGameForHost(gameId: String) {
@@ -313,8 +314,6 @@ class GameActivity : AppCompatActivity(), NotificationListener {
             Toast.makeText(this, "Game data is not available.", Toast.LENGTH_SHORT).show()
         }
     }
-
-
 
     // Set UI for displaying the game state and lobby details
     fun setUI() {
@@ -453,6 +452,16 @@ class GameActivity : AppCompatActivity(), NotificationListener {
     private fun listenForCaughtHiders(gameId: String?) {
         if (gameId.isNullOrEmpty()) return
 
+        firestore.collection("caught").document(gameId)
+        Log.e("GameActivity", "listenForCaughtHiders fired")
+
+            .addSnapshotListener { snapshot, error
+                if (error != null) {
+                    Log.e("GameActivity", "Error listening for caught hiders: ${error.message}")
+                    return@addSnapshotListener
+                }
+            }
+
         firestore.collection("games").document(gameId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -460,15 +469,18 @@ class GameActivity : AppCompatActivity(), NotificationListener {
                     return@addSnapshotListener
                 }
 
+                Log.e("GameActivity", "listenForCaughtHiders fired")
+
                 val model = snapshot?.toObject(GameModel::class.java)
                 if (model != null) {
                     this.gameModel = model
                     val updatedPlayers = model.players
                     if (updatedPlayers.isNotEmpty()) {
+
                         for (player in updatedPlayers) {
                             val localPlayer = playersList.find { it.playerName == player.playerName }
                             if (localPlayer != null && localPlayer.found != player.found) {
-                                notifyPlayerCaught()
+
                             }
                         }
                         playersList.clear()

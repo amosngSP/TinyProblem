@@ -134,6 +134,11 @@ class MainBluetooth : AppCompatActivity() {
         }
     }
 
+    override fun onRestart() {
+        super.onRestart()
+        bluetoothLeConnection?.close()
+    }
+
     private fun startBLEScan() {
         if (!hasRequiredBluetoothPermissions()) {
             requestBluetoothPermissions()

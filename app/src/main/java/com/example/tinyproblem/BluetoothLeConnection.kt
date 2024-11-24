@@ -320,10 +320,12 @@ class BluetoothLeConnection : Service() {
     }
 
     override fun onBind(intent: Intent): IBinder {
+        logMessage("onBind called")
         return binder
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
+        logMessage("onUnbind called")
         return super.onUnbind(intent)
     }
 
