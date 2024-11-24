@@ -455,12 +455,12 @@ class GameActivity : AppCompatActivity(), NotificationListener {
         firestore.collection("caught").document(gameId)
         Log.e("GameActivity", "listenForCaughtHiders fired")
 
-            .addSnapshotListener { snapshot, error
-                if (error != null) {
-                    Log.e("GameActivity", "Error listening for caught hiders: ${error.message}")
-                    return@addSnapshotListener
-                }
-            }
+//            .addSnapshotListener { snapshot, error
+//                if (error != null) {
+//                    Log.e("GameActivity", "Error listening for caught hiders: ${error.message}")
+//                    return@addSnapshotListener
+//                }
+//            }
 
         firestore.collection("games").document(gameId)
             .addSnapshotListener { snapshot, error ->
