@@ -290,8 +290,6 @@ class GameActivity : AppCompatActivity(), NotificationListener {
                     secondTimerEndTime = secondTimerEndTime
                 )
 
-                listenForCaughtHiders(gameId)
-
                 // Save to Firestore
                 firestore.collection("games").document(gameId)
                     .set(updatedGameModel)
@@ -452,15 +450,7 @@ class GameActivity : AppCompatActivity(), NotificationListener {
     private fun listenForCaughtHiders(gameId: String?) {
         if (gameId.isNullOrEmpty()) return
 
-        firestore.collection("caught").document(gameId)
-        Log.e("GameActivity", "listenForCaughtHiders fired")
-
-//            .addSnapshotListener { snapshot, error
-//                if (error != null) {
-//                    Log.e("GameActivity", "Error listening for caught hiders: ${error.message}")
-//                    return@addSnapshotListener
-//                }
-//            }
+        Log.d("GameActivity", "listenForCaughtHiders called to start listener")
 
         firestore.collection("games").document(gameId)
             .addSnapshotListener { snapshot, error ->
@@ -468,8 +458,6 @@ class GameActivity : AppCompatActivity(), NotificationListener {
                     Log.e("GameActivity", "Error listening for caught hiders: ${error.message}")
                     return@addSnapshotListener
                 }
-
-                Log.e("GameActivity", "listenForCaughtHiders fired")
 
                 val model = snapshot?.toObject(GameModel::class.java)
                 if (model != null) {
@@ -480,7 +468,7 @@ class GameActivity : AppCompatActivity(), NotificationListener {
                         for (player in updatedPlayers) {
                             val localPlayer = playersList.find { it.playerName == player.playerName }
                             if (localPlayer != null && localPlayer.found != player.found) {
-
+                                notifyPlayerCaught()
                             }
                         }
                         playersList.clear()
@@ -536,6 +524,8 @@ class GameActivity : AppCompatActivity(), NotificationListener {
                                 bluetoothLeConnection?.writePayload(payloadStr.toByteArray())
 
                                 start_signal=true
+
+                                listenForCaughtHiders(gameId)
                             }
 
                             val hidingTimeRemaining = model.hidingPhaseEndTime?.minus(currentTime) ?: 0
