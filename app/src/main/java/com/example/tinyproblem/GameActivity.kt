@@ -447,6 +447,7 @@ class GameActivity : AppCompatActivity(), NotificationListener {
             }
     }
 
+
     private fun listenForCaughtHiders(gameId: String?) {
         if (gameId.isNullOrEmpty()) return
 
@@ -466,9 +467,13 @@ class GameActivity : AppCompatActivity(), NotificationListener {
                     if (updatedPlayers.isNotEmpty()) {
 
                         for (player in updatedPlayers) {
-                            val localPlayer = playersList.find { it.playerName == player.playerName }
-                            if (localPlayer != null && localPlayer.found != player.found) {
-                                notifyPlayerCaught()
+
+                            if(player.playerName!=playerName){
+                                val localPlayer = playersList.find { it.playerName == player.playerName }
+                                if (localPlayer != null && localPlayer.found != player.found) {
+                                    notifyPlayerCaught()
+                                }
+
                             }
                         }
                         playersList.clear()
@@ -478,6 +483,7 @@ class GameActivity : AppCompatActivity(), NotificationListener {
                 }
             }
     }
+
 
     private fun listenForTimers() {
         gameId?.let { id ->
