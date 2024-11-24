@@ -12,8 +12,12 @@ import com.google.firebase.firestore.FirebaseFirestore
 import androidx.recyclerview.widget.GridLayoutManager
 import android.os.CountDownTimer
 import android.os.IBinder
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
+import java.math.BigDecimal
+import kotlin.math.floor
 
-class GameActivity : AppCompatActivity() {
+class GameActivity : AppCompatActivity(), NotificationListener {
 
     private lateinit var binding: ActivityGameBinding
     private var countDownTimer: CountDownTimer? = null // Declare timer here
@@ -25,18 +29,50 @@ class GameActivity : AppCompatActivity() {
     private var gameId: String? = null // To hold the game ID
     private var secondTimerDuration: Long? = null // Duration for the second timer
     private var secondCountDownTimer: CountDownTimer? = null
+    private var start_signal: Boolean = false
+
+    private var playerCaught: Boolean = false;
 
     private var bluetoothLeConnection: BluetoothLeConnection? = null
 
     private val serviceConnection: ServiceConnection = object: ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             bluetoothLeConnection = (service as BluetoothLeConnection.LocalBinder).getService()
-            bluetoothLeConnection?.initialize()
+            val status = bluetoothLeConnection?.initialize()!!
+            if (status) {
+                bluetoothLeConnection?.setNotificationListener(this@GameActivity)
+            }
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             bluetoothLeConnection = null
         }
+    }
+
+    override fun onNotificationReceived(message: String) {
+        logMessage("in GameActivity thread $message")
+
+        val playerPos = playersList.indexOfFirst { it.playerName == playerName }
+        playersList[playerPos].found = true
+
+        playerCaught = true
+
+        gameId?.let { id ->
+            firestore.collection("games").document(id)
+                .update("players", playersList)
+                .addOnSuccessListener {
+                    logMessage("onNotificationReceived updated playersList")
+                }
+                .addOnFailureListener {
+                    logMessage("onNotificationReceived error updating playersList")
+                }
+        }
+    }
+
+    private fun notifyPlayerCaught() {
+        logMessage("notifying player caught")
+        val caughtPayload = "{\"game_action\": \"caught\"}"
+        bluetoothLeConnection?.writePayload(caughtPayload.toByteArray())
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -134,7 +170,7 @@ class GameActivity : AppCompatActivity() {
                     val updatedPlayers = playersList.map { playerName ->
                         Player(
                             playerName = playerName.playerName,
-                            role = if (hiders.contains(playerName)) "Hider" else "Seeker",
+                            role = if (hiders.contains(playerName)) "hider" else "seeker",
                             host = playerName.host
                         )
                     }
@@ -142,7 +178,7 @@ class GameActivity : AppCompatActivity() {
 
                     // Update Firestore
                     gameModel?.let { model ->
-                        val updatedGameModel = model.copy(players = updatedPlayers)
+                        val updatedGameModel = model.copy(players = updatedPlayers, hiders = hiderCount)
                         firestore.collection("games").document(gameId!!)
                             .set(updatedGameModel)
                             .addOnSuccessListener {
@@ -208,8 +244,6 @@ class GameActivity : AppCompatActivity() {
         super.onDestroy()
         countDownTimer?.cancel()
         secondCountDownTimer?.cancel()
-
-        bluetoothLeConnection?.close()
     }
 
     fun startGameForHost(gameId: String) {
@@ -278,8 +312,6 @@ class GameActivity : AppCompatActivity() {
             Toast.makeText(this, "Game data is not available.", Toast.LENGTH_SHORT).show()
         }
     }
-
-
 
     // Set UI for displaying the game state and lobby details
     fun setUI() {
@@ -415,8 +447,7 @@ class GameActivity : AppCompatActivity() {
             }
     }
 
-<<<<<<< Updated upstream
-=======
+
     private fun listenForCaughtHiders(gameId: String?) {
         if (gameId.isNullOrEmpty()) return
 
@@ -436,11 +467,13 @@ class GameActivity : AppCompatActivity() {
                     if (updatedPlayers.isNotEmpty()) {
 
                         for (player in updatedPlayers) {
+
                             if(player.playerName!=playerName){
                                 val localPlayer = playersList.find { it.playerName == player.playerName }
                                 if (localPlayer != null && localPlayer.found != player.found) {
                                     notifyPlayerCaught()
                                 }
+
                             }
                         }
                         playersList.clear()
@@ -451,7 +484,7 @@ class GameActivity : AppCompatActivity() {
             }
     }
 
->>>>>>> Stashed changes
+
     private fun listenForTimers() {
         gameId?.let { id ->
             firestore.collection("games").document(id)
@@ -470,25 +503,69 @@ class GameActivity : AppCompatActivity() {
                         val currentTime = System.currentTimeMillis()
 
                         // Update secondTimerDuration
-                        secondTimerDuration = model.secondTimerDuration ?: 60000 // Default to 60 seconds if null
+                        secondTimerDuration = model.secondTimerEndTime ?: 60000 // Default to 60 seconds if null
 
                         if (model.gameStatus == GameStatus.INPROGRESS) {
-                            // Start the first timer (hiding phase)
-                            val hidingTimeRemaining = model.hidingPhaseEndTime?.minus(currentTime)
-                            if (hidingTimeRemaining != null && hidingTimeRemaining > 0) {
-                                startCountdownTimer(hidingTimeRemaining)
-                            } else {
-                                // If the hiding phase is over, start the seeking timer
-                                val seekingTimeRemaining = model.secondTimerEndTime?.minus(currentTime)
-                                if (seekingTimeRemaining != null && seekingTimeRemaining > 0) {
-                                    startSecondCountdownTimer(seekingTimeRemaining)
-                                } else {
-                                    // Both timers are finished
-                                    binding.timerText.text = "Time's up! Hiders won!"
-                                    countDownTimer?.cancel()
-                                    secondCountDownTimer?.cancel()
-                                }
+                            //send the start signal
+                            if(!start_signal)
+                            {
+                                val noOfHiders = model.hiders;
+                                val playerList = model.players;
+                                val hidingDuration = if (model.hidingPhaseEndTime != null) model.hidingPhaseEndTime / 1000 else 0
+                                val seekingDuration = if (model.secondTimerEndTime != null) model.secondTimerEndTime / 1000 else 0
+                                val currentEpochTimeInSeconds = currentEpochTime()
+                                val role = playersList.find { it.playerName == playerName }?.role ?: "hider"
+                                val gPayload = GamePayload(
+                                    "start",
+                                    currentEpochTimeInSeconds,
+                                    hidingDuration,
+                                    seekingDuration,
+                                    noOfHiders,
+                                    role
+                                )
+
+                                val json = Json {ignoreUnknownKeys = true}
+                                val payloadStr = json.encodeToString(gPayload)
+
+                                bluetoothLeConnection?.writePayload(payloadStr.toByteArray())
+
+                                start_signal=true
+
+                                listenForCaughtHiders(gameId)
                             }
+
+                            val hidingTimeRemaining = model.hidingPhaseEndTime?.minus(currentTime) ?: 0
+                            val seekingTimeRemaining = model.secondTimerEndTime?.minus(currentTime) ?: 0
+
+                            if (hidingTimeRemaining > 0) {
+                                startHidingTimer(hidingTimeRemaining)
+                            } else if (seekingTimeRemaining > 0) {
+                                startSeekingTimer(seekingTimeRemaining)
+                            } else {
+                                // Game over
+                                binding.timerText.text = "Time's up! Hiders won!"
+                                countDownTimer?.cancel()
+                                secondCountDownTimer?.cancel()
+                            }
+
+
+                            // gemini said no
+//                            // Start the first timer (hiding phase)
+//                            val hidingTimeRemaining = model.hidingPhaseEndTime
+//                            if (hidingTimeRemaining != null && hidingTimeRemaining > 0) {
+//                                startCountdownTimer(hidingTimeRemaining)
+//                            } else {
+//                                // If the hiding phase is over, start the seeking timer
+//                                val seekingTimeRemaining = model.secondTimerEndTime
+//                                if (seekingTimeRemaining != null && seekingTimeRemaining > 0) {
+//                                    startSecondCountdownTimer(seekingTimeRemaining)
+//                                } else {
+//                                    // Both timers are finished
+//                                    binding.timerText.text = "Time's up! Hiders won!"
+//                                    countDownTimer?.cancel()
+//                                    secondCountDownTimer?.cancel()
+//                                }
+//                            }
                         } else {
                             // If the game is not in progress, reset the UI and stop timers
                             binding.timerText.text = "Waiting to start..."
@@ -500,12 +577,59 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
-    private fun startCountdownTimer(durationMillis: Long) {
-        countDownTimer?.cancel() // Cancel any existing timer
-        countDownTimer = object : CountDownTimer(durationMillis, 1000) {
+    private fun startHidingTimer(durationInMillis: Long) {
+        countDownTimer?.cancel()
+        countDownTimer = object : CountDownTimer(durationInMillis, 1000) {
+            override fun onTick(millisUntilFinished:
+                                Long) {
+                val seconds = millisUntilFinished / 1000
+                val minutes = seconds / 60
+                val remainingSeconds = seconds % 60
+                binding.timerText.text = "Hiding time left: $minutes mins $remainingSeconds secs"
+            }
+
+            override fun onFinish() {
+                binding.timerText.text = "Hiding phase over! Seeking begins."
+                // You might want to trigger a function here to start the seeking phase
+                // or handle any logic related to the transition between phases.
+            }
+        }.start()
+    }
+
+    private fun startSeekingTimer(durationInMillis: Long) {
+        secondCountDownTimer?.cancel()
+        secondCountDownTimer = object : CountDownTimer(durationInMillis, 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                val secondsLeft = millisUntilFinished / 1000
-                binding.timerText.text = "Hiding time left: $secondsLeft seconds"
+                val seconds = millisUntilFinished / 1000
+                val minutes = seconds / 60
+                val remainingSeconds = seconds % 60
+                binding.timerText.text = "Seeking time left: $minutes mins $remainingSeconds secs"
+            }
+
+            override fun onFinish() {
+                binding.timerText.text = "Time's up! Hiders won!"
+            }
+        }.start()
+    }
+
+    private fun startCountdownTimer(i: Long) {
+        countDownTimer?.cancel() // Cancel any existing timer
+        countDownTimer = object : CountDownTimer((currentEpochTime() - i) + 1, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+//                val currentMillis = currentEpochTime()
+//                val seconds = (i/1000) - currentMillis
+
+//                // If time is up, stop the timer
+//                if (seconds <= 0) {
+//                    finish()
+//                    cancel()
+//                }
+
+                val seconds = millisUntilFinished / 1000
+                val minutes = seconds / 60
+                val remainingSeconds = seconds % 60
+
+                binding.timerText.text = "Hiding time left: $minutes mins $remainingSeconds secs"
             }
 
             override fun onFinish() {
@@ -514,16 +638,25 @@ class GameActivity : AppCompatActivity() {
                 val safeSecondDuration = secondTimerDuration ?: 60000 // Default to 60 seconds
                 startSecondCountdownTimer(safeSecondDuration)
             }
-        }
-        countDownTimer?.start()
+        }.start()
     }
 
-    private fun startSecondCountdownTimer(durationMillis: Long) {
-        secondCountDownTimer?.cancel() // Cancel any existing second timer
-        secondCountDownTimer = object : CountDownTimer(durationMillis, 1000) {
+    private fun startSecondCountdownTimer(i: Long) {
+        countDownTimer?.cancel() // Cancel any existing timer
+        countDownTimer = object : CountDownTimer(Long.MAX_VALUE, 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                val secondsLeft = millisUntilFinished / 1000
-                binding.timerText.text = "Seeking time left: $secondsLeft seconds"
+                val currentMillis = currentEpochTime()
+                val seconds = (i/1000) - currentMillis
+
+                // If time is up, stop the timer
+                if (seconds <= 0) {
+                    onFinish()
+                    cancel()
+                }
+                val minutes = seconds / 60
+                val remainingSeconds = seconds % 60
+
+                binding.timerText.text = "Seeking time left: $minutes mins $remainingSeconds secs"
             }
 
             override fun onFinish() {
@@ -540,7 +673,7 @@ class GameActivity : AppCompatActivity() {
 
         } else {
             (binding.playerListRecyclerView.adapter as PlayerAdapter).apply {
-                updatePlayers(playersList.map { player -> Player(player.playerName, player.role,player.host) })
+                updatePlayers(playersList.map { player -> Player(player.playerName, player.role, player.host) })
             }
         }
     }

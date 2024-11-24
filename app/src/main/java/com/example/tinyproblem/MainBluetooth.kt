@@ -27,21 +27,6 @@ import androidx.core.view.WindowInsetsCompat
 import com.example.tinyproblem.databinding.ActivityMainBluetoothBinding
 import com.google.android.material.snackbar.Snackbar
 
-class CustomerArrayAdapter(private val context: Context, private val items: MutableList<ScanResult>): ArrayAdapter<ScanResult>(context, 0, items) {
-    @SuppressLint("MissingPermission")
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-        val view: View = convertView ?: LayoutInflater.from(context).inflate(android.R.layout.simple_list_item_1, parent, false)
-
-        val textView = view.findViewById<TextView>(android.R.id.text1)
-
-        val currentItem = items[position]
-
-        textView.text = currentItem.device.name.toString()
-
-        return view
-    }
-}
-
 @SuppressLint("MissingPermission")
 class MainBluetooth : AppCompatActivity() {
     // BLE scan results
@@ -149,13 +134,18 @@ class MainBluetooth : AppCompatActivity() {
         }
     }
 
+    override fun onRestart() {
+        super.onRestart()
+        bluetoothLeConnection?.close()
+    }
+
     private fun startBLEScan() {
         if (!hasRequiredBluetoothPermissions()) {
             requestBluetoothPermissions()
         }
 
         if (!hasRequiredBluetoothPermissions()) {
-            Snackbar.make(binding.root, "Failed to request for BLE", Snackbar.LENGTH_SHORT).show()
+//            Snackbar.make(binding.root, "Failed to request for BLE", Snackbar.LENGTH_SHORT).show()
             return
         }
 

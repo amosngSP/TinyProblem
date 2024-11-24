@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
-import android.bluetooth.BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
 import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
@@ -15,7 +14,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
-import kotlinx.coroutines.delay
 import java.util.UUID
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -43,10 +41,19 @@ class BluetoothLeConnection : Service() {
         private const val STATE_CONNECTED = 2
     }
 
-    fun sendToOthers(message: ByteArray) {
-        // TODO: send message to others via firebase?
+    private var notificationListener: NotificationListener? = null
+
+    // set the activity object that has inherited NotificationListener
+    // to link a callback
+    fun setNotificationListener(listener: NotificationListener) {
+        this.notificationListener = listener
     }
 
+    fun receiveNotification(message: String) {
+        notificationListener?.onNotificationReceived(message)
+    }
+
+    // event callback for an established gatt connection to the TinyCircuit
     private val bluetoothGattCallback = object: BluetoothGattCallback() {
         @SuppressLint("MissingPermission")
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
@@ -109,7 +116,7 @@ class BluetoothLeConnection : Service() {
         ) {
             logMessage("onCharacteristicChanged")
             logMessage("uuid: ${characteristic.uuid} value: ${value.decodeToString()}")
-            sendToOthers(value)
+            receiveNotification(value.decodeToString())
             super.onCharacteristicChanged(gatt, characteristic, value)
         }
 
@@ -213,13 +220,9 @@ class BluetoothLeConnection : Service() {
 
     @SuppressLint("NewApi", "MissingPermission")
     fun writePayload(payload: ByteArray): Boolean {
+        logMessage("new payload received! size: ${payload.size} bytes")
         if (bluetoothGatt == null)
             return false
-
-        // do we need reliableWrite?
-//        if (!bluetoothGatt!!.beginReliableWrite()) {
-//            logMessage("unable to beginReliableWrite")
-//        }
 
         val pos = bluetoothService!!.characteristics.indexOfFirst { it.uuid.toString() == writeCharacteristicUuid }
 
@@ -240,40 +243,27 @@ class BluetoothLeConnection : Service() {
                 }
             }
 
-            if (payload.size > 20) {
-                writeQueue.add("START".toByteArray())
+            writeQueue.add("START".toByteArray())
 
-                val chunks = payload.toList().chunked(15)
+            val chunks = payload.toList().chunked(15)
 
-                for (chunk in chunks) {
-                    writeQueue.add(chunk.toByteArray())
-                }
-
-                writeQueue.add("END".toByteArray())
-
-                val writePayload = writeQueue.poll()
-
-                logMessage("writePayload - ${writePayload!!.decodeToString()}")
-
-                bluetoothGatt!!.writeCharacteristic(
-                    characteristic,
-                    writePayload,
-                    writeType
-                )
-            } else {
-                writeQueue.add("START".toByteArray())
-                writeQueue.add(payload)
-                writeQueue.add("END".toByteArray())
-
-                val writePayload = writeQueue.poll()
-                bluetoothGatt!!.writeCharacteristic(
-                    characteristic,
-                    writePayload,
-                    writeType
-                )
+            for (chunk in chunks) {
+                writeQueue.add(chunk.toByteArray())
             }
 
-            logMessage("sending payload to characteristic ")
+            writeQueue.add("END".toByteArray())
+
+            val writePayload = writeQueue.poll()
+
+            logMessage("writePayload - ${writePayload!!.decodeToString()}")
+
+            bluetoothGatt!!.writeCharacteristic(
+                characteristic,
+                writePayload,
+                writeType
+            )
+
+            logMessage("sending payload to characteristic ${characteristic.uuid}")
 
             return true
         }
@@ -330,10 +320,12 @@ class BluetoothLeConnection : Service() {
     }
 
     override fun onBind(intent: Intent): IBinder {
+        logMessage("onBind called")
         return binder
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
+        logMessage("onUnbind called")
         return super.onUnbind(intent)
     }
 
