@@ -415,6 +415,43 @@ class GameActivity : AppCompatActivity() {
             }
     }
 
+<<<<<<< Updated upstream
+=======
+    private fun listenForCaughtHiders(gameId: String?) {
+        if (gameId.isNullOrEmpty()) return
+
+        Log.d("GameActivity", "listenForCaughtHiders called to start listener")
+
+        firestore.collection("games").document(gameId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("GameActivity", "Error listening for caught hiders: ${error.message}")
+                    return@addSnapshotListener
+                }
+
+                val model = snapshot?.toObject(GameModel::class.java)
+                if (model != null) {
+                    this.gameModel = model
+                    val updatedPlayers = model.players
+                    if (updatedPlayers.isNotEmpty()) {
+
+                        for (player in updatedPlayers) {
+                            if(player.playerName!=playerName){
+                                val localPlayer = playersList.find { it.playerName == player.playerName }
+                                if (localPlayer != null && localPlayer.found != player.found) {
+                                    notifyPlayerCaught()
+                                }
+                            }
+                        }
+                        playersList.clear()
+                        playersList.addAll(updatedPlayers)
+                        updatePlayerListUI()
+                    }
+                }
+            }
+    }
+
+>>>>>>> Stashed changes
     private fun listenForTimers() {
         gameId?.let { id ->
             firestore.collection("games").document(id)
